@@ -24,7 +24,8 @@ INNER JOIN dim_localizacao dl ON fo.sk_localizacao = dl.sk_localizacao
 INNER JOIN dim_status      ds ON fo.sk_status      = ds.sk_status
 GROUP BY
     dl.regiao,
-    ds.status
+    ds.status,
+    ds.ordem_fluxo
 ORDER BY
     dl.regiao,
     ds.ordem_fluxo;
