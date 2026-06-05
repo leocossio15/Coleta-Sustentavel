@@ -1,0 +1,161 @@
+------------------------------------------------------------------------
+
+title: "Dashboard Estratégico - Coleta de Resíduos Urbanos em Cidades Sustentáveis" output: flexdashboard::flex_dashboard: orientation: rows vertical_layout: fill runtime: shiny --------------
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(plotly)
+library(readr)
+library(dplyr)
+library(DT)
+
+# Importação dos CSVs
+Volume_residuos_regiao <- read_csv("Volume_residuos_regiao.csv")
+Evoluçao_mensal_ocorrencias <- read_csv("Evoluçao_mensal_ocorrencias.csv")
+Indice_reincidencia_regiao <- read_csv("Indice_reincidencia_regiao.csv")
+Tempo_medio_resoluçao_prioridade <- read_csv("Tempo_medio_resoluçao_prioridade.csv")
+Tipos_residuos_encontrados <- read_csv("Tipos_residuos_encontrados.csv")
+Ranking_bairros_criticos <- read_csv("Ranking_bairros_criticos.csv")
+Eficiencia_coleta_regiao <- read_csv("Eficiencia_coleta_regiao.csv")
+```
+
+## Row
+
+### Total de Ocorrências
+
+```{r}
+valueBox(
+  sum(Ranking_bairros_criticos$total_ocorrencias),
+  caption = "Ocorrências Registradas"
+)
+```
+
+### Volume Total Coletado
+
+```{r}
+valueBox(
+  round(sum(Volume_residuos_regiao$volume_total),0),
+  caption = "Volume Estimado"
+)
+```
+
+### Tempo Médio de Resolução
+
+```{r}
+valueBox(
+  round(mean(Tempo_medio_resoluçao_prioridade$tempo_medio_horas),1),
+  caption = "Horas"
+)
+```
+
+### Eficiência Média
+
+```{r}
+valueBox(
+  paste0(round(mean(Eficiencia_coleta_regiao$taxa_atendimento),1),"%"),
+  caption = "Taxa de Atendimento"
+)
+```
+
+## Row
+
+### Evolução Mensal das Ocorrências
+
+```{r}
+plot_ly(
+  Evoluçao_mensal_ocorrencias,
+  x = ~nome_mes,
+  y = ~total_ocorrencias,
+  type = "scatter",
+  mode = "lines+markers"
+) |>
+layout(
+  title = "Evolução Mensal das Ocorrências",
+  xaxis = list(title = "Mês"),
+  yaxis = list(title = "Quantidade de Ocorrências")
+)
+```
+
+### Volume de Resíduos por Região
+
+```{r}
+plot_ly(
+  Volume_residuos_regiao,
+  x = ~volume_total,
+  y = ~regiao,
+  type = "bar",
+  orientation = "h"
+)
+```
+
+## Row
+
+### Índice de Reincidência por Região
+
+```{r}
+plot_ly(
+  Indice_reincidencia_regiao,
+  x = ~percentual_reincidencia,
+  y = ~regiao,
+  type = "bar",
+  orientation = "h"
+)
+```
+
+### Tempo Médio de Resolução por Prioridade
+
+```{r}
+plot_ly(
+  Tempo_medio_resoluçao_prioridade,
+  x = ~prioridade,
+  y = ~tempo_medio_horas,
+  type = "bar"
+)
+```
+
+## Row
+
+### Tipos de Resíduos Mais Encontrados
+
+```{r}
+plot_ly(
+  Tipos_residuos_encontrados,
+  labels = ~tipo_residuo,
+  values = ~total_residuos,
+  type = "pie"
+)
+```
+
+### Ranking de Bairros Críticos
+
+```{r}
+plot_ly(
+  Ranking_bairros_criticos,
+  x = ~total_ocorrencias,
+  y = ~bairro,
+  type = "bar",
+  orientation = "h"
+)
+```
+
+## Row
+
+### Eficiência da Coleta por Região
+
+```{r}
+plot_ly(
+  Eficiencia_coleta_regiao,
+  x = ~regiao,
+  y = ~taxa_atendimento,
+  type = "bar"
+)
+```
+
+### Dados Consolidados
+
+```{r}
+datatable(
+  Eficiencia_coleta_regiao,
+  options = list(pageLength = 5)
+)
+```
