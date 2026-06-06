@@ -137,7 +137,8 @@ p_elbow <- ggplot(df_elbow, aes(x = k, y = wcss)) +
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(face = "bold"))
 
-print(p_elbow)
+ggsave("grafico_elbow.png", plot = p_elbow, width = 8, height = 5, dpi = 150)
+cat("Salvo: grafico_elbow.png\n")
 
 # =============================================================================
 # PASSO 4: TREINAMENTO DO MODELO K-MEANS (k = 4)
