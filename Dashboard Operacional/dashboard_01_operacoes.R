@@ -54,7 +54,10 @@ ui <- bs4DashPage(
 
 server <- function(input, output, session){
   output$abertas <- renderbs4ValueBox({
-    valor <- dbGetQuery(con,"SELECT COUNT(*) total FROM ocorrencia")
+    valor <- dbGetQuery(con,"
+    SELECT COUNT(*) total FROM ocorrencia o
+    JOIN status_ocorrencia s ON s.id_status = o.id_status
+    WHERE s.nome_status NOT IN ('PENDENTE_VALIDACAO', 'REJEITADA')")
     bs4ValueBox(
       value = valor$total,
       subtitle = "Ocorrências",
