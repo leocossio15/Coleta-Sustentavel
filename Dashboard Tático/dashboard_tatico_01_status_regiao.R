@@ -12,7 +12,7 @@ cores_status <- c(
   "ABERTA"         = "#3498DB",
   "EM_ANALISE"     = "#F39C12",
   "EM_ATENDIMENTO" = "#9B59B6",
-  "FINALIZADA"     = "#2ECC71",
+  "ENCERRADA"      = "#2ECC71",
   "CANCELADA"      = "#95A5A6"
 )
 
@@ -61,7 +61,7 @@ ui <- bs4DashPage(
 
     fluidRow(
       bs4Card(
-        title       = "Percentual de Ocorrências Finalizadas por Região",
+        title       = "Percentual de Ocorrências Encerradas por Região",
         width       = 12,
         status      = "success",
         solidHeader = TRUE,
@@ -99,10 +99,10 @@ server <- function(input, output, session) {
   output$pct_finalizadas <- renderbs4ValueBox({
     d     <- dados()
     total <- sum(d$total_ocorrencias)
-    fin   <- sum(d$total_ocorrencias[d$status == "FINALIZADA"])
+    fin   <- sum(d$total_ocorrencias[d$status == "ENCERRADA"])
     bs4ValueBox(
       value    = paste0(round(100 * fin / total, 1), "%"),
-      subtitle = "Finalizadas",
+      subtitle = "Encerradas",
       icon     = icon("check-circle"),
       color    = "success",
       gradient = TRUE
@@ -178,7 +178,7 @@ server <- function(input, output, session) {
       group_by(regiao) |>
       summarise(
         total      = sum(total_ocorrencias),
-        finalizadas = sum(total_ocorrencias[status == "FINALIZADA"]),
+        finalizadas = sum(total_ocorrencias[status == "ENCERRADA"]),
         .groups    = "drop"
       ) |>
       mutate(taxa_pct = round(100 * finalizadas / total, 1)) |>
@@ -195,7 +195,7 @@ server <- function(input, output, session) {
     ) |>
       layout(
         xaxis = list(title = "Região"),
-        yaxis = list(title = "% Finalizadas", range = c(0, 105))
+        yaxis = list(title = "% Encerradas", range = c(0, 105))
       )
   })
 }
