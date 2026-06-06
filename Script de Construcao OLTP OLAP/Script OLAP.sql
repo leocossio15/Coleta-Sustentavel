@@ -203,7 +203,8 @@ SELECT
             SELECT COUNT(*)
             FROM ocorrencia o2
             WHERE o2.id_ponto = o.id_ponto
-        ) > 1,
+				AND o2.id_ocorrencia < o.id_ocorrencia
+        ) > 0,
 
         TRUE,
         FALSE
