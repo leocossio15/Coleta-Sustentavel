@@ -158,7 +158,7 @@ ALTER TABLE tipo_residuo
       Alimenta a sinalização visual dos pontos de descarte no mapa.
     */
 
-    ADD COLUMN classe_nbr VARCHAR(10) NULL;
+    ADD COLUMN classe_nbr VARCHAR(20) NULL;
     /*
       NBR ABNT 10.004/2004 — classificação por periculosidade:
         CLASSE_I   → perigosos       (= periculosidade ALTA)
