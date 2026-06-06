@@ -74,9 +74,12 @@ server <- function(input, output, session){
   })
 
   output$categorias <- renderPlotly({
-    dados <- dbGetQuery(con,"SELECT categoria, COUNT(*) quantidade
-    FROM tipo_residuo
-    GROUP BY categoria")
+    dados <- dbGetQuery(con,"
+    SELECT tr.categoria, COUNT(*) quantidade
+    FROM ocorrencia_residuo orr
+    JOIN tipo_residuo tr ON tr.id_tipo_residuo = orr.id_tipo_residuo
+    GROUP BY tr.categoria
+    ORDER BY quantidade DESC")
 
     plot_ly(
       dados,
