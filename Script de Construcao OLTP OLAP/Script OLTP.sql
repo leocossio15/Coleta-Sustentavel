@@ -17,6 +17,7 @@ TRUNCATE TABLE regiao_administrativa;
 TRUNCATE TABLE tipo_residuo;
 TRUNCATE TABLE status_ocorrencia;
 TRUNCATE TABLE responsavel;
+TRUNCATE TABLE denunciante;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -175,37 +176,54 @@ CALL inserir_pontos();
 
 
 -- TIPOS DE RESÍDUOS
+-- [AJUSTADO] Adicionados cor_padrao_conama e classe_nbr conforme CONAMA 275/2001 e NBR ABNT 10.004/2004
 INSERT INTO tipo_residuo(
     nome_tipo,
     categoria,
     periculosidade,
-    descricao
+    descricao,
+    cor_padrao_conama,
+    classe_nbr
 )
 VALUES
-('Entulho', 'Construção', 'MEDIA', 'Restos de obra'),
-('Plástico', 'Reciclável', 'BAIXA', 'Material plástico'),
-('Vidro', 'Reciclável', 'MEDIA', 'Fragmentos de vidro'),
-('Metal', 'Reciclável', 'BAIXA', 'Sucata metálica'),
-('Madeira', 'Orgânico', 'BAIXA', 'Restos de madeira'),
-('Pneu', 'Especial', 'ALTA', 'Pneus descartados'),
-('Hospitalar', 'Saúde', 'ALTA', 'Lixo hospitalar'),
-('Eletrônico', 'Tecnológico', 'MEDIA', 'Equipamentos eletrônicos'),
-('Óleo', 'Químico', 'ALTA', 'Óleo descartado'),
-('Podas', 'Orgânico', 'BAIXA', 'Restos vegetais');
+('Entulho',    'Construção',   'MEDIA', 'Restos de obra',                'CINZA',    'CLASSE_II_A'),
+('Plástico',   'Reciclável',   'BAIXA', 'Material plástico',             'VERMELHO', 'CLASSE_II_B'),
+('Vidro',      'Reciclável',   'MEDIA', 'Fragmentos de vidro',           'VERDE',    'CLASSE_II_A'),
+('Metal',      'Reciclável',   'BAIXA', 'Sucata metálica',               'AMARELO',  'CLASSE_II_B'),
+('Madeira',    'Orgânico',     'BAIXA', 'Restos de madeira',             'CINZA',    'CLASSE_II_B'),
+('Pneu',       'Especial',     'ALTA',  'Pneus descartados',             'LARANJA',  'CLASSE_I'),
+('Hospitalar', 'Saúde',        'ALTA',  'Lixo hospitalar',               'BRANCO',   'CLASSE_I'),
+('Eletrônico', 'Tecnológico',  'MEDIA', 'Equipamentos eletrônicos',      'LARANJA',  'CLASSE_II_A'),
+('Óleo',       'Químico',      'ALTA',  'Óleo descartado',               'LARANJA',  'CLASSE_I'),
+('Podas',      'Orgânico',     'BAIXA', 'Restos vegetais',               'MARROM',   'CLASSE_II_B');
 
 
 -- STATUS
+-- [AJUSTADO] Substituídos pelos status corretos do fluxo revisado (Script Parte 2)
 INSERT INTO status_ocorrencia(
     nome_status,
     descricao,
     ordem_fluxo
 )
 VALUES
-('ABERTA', 'Ocorrência aberta', 1),
-('EM_ANALISE', 'Em análise', 2),
-('EM_ATENDIMENTO', 'Equipe acionada', 3),
-('FINALIZADA', 'Ocorrência encerrada', 4),
-('CANCELADA', 'Ocorrência cancelada', 5);
+('PENDENTE_VALIDACAO',
+ 'Ocorrência recém-registrada. Aguarda análise de responsável técnico antes de entrar no fluxo operacional.',
+ 1),
+('ABERTA',
+ 'Ocorrência validada e confirmada por responsável. Entra no fluxo de atendimento.',
+ 2),
+('EM_ATENDIMENTO',
+ 'Atendimento de coleta agendado ou em execução.',
+ 3),
+('ENCERRADA',
+ 'Coleta concluída e ponto saneado.',
+ 4),
+('REJEITADA',
+ 'Ocorrência analisada e descartada. Motivo registrado obrigatoriamente em motivo_rejeicao.',
+ 5),
+('DUPLICADA',
+ 'Ocorrência identificada como duplicata de registro já existente para o mesmo ponto e período.',
+ 6);
 
 
 -- RESPONSÁVEIS
@@ -262,7 +280,29 @@ DELIMITER ;
 CALL inserir_responsaveis();
 
 
+-- DENUNCIANTES
+-- [NOVO] Popula tabela criada na Parte 2 com hashes fictícios representando CPFs anonimizados
+-- Denunciantes ativos (ids 1-9)
+INSERT INTO denunciante (cpf_hash, bloqueado)
+VALUES
+(SHA2('111.111.111-11', 256), FALSE),
+(SHA2('222.222.222-22', 256), FALSE),
+(SHA2('333.333.333-33', 256), FALSE),
+(SHA2('444.444.444-44', 256), FALSE),
+(SHA2('555.555.555-55', 256), FALSE),
+(SHA2('666.666.666-66', 256), FALSE),
+(SHA2('777.777.777-77', 256), FALSE),
+(SHA2('888.888.888-88', 256), FALSE),
+(SHA2('999.999.999-99', 256), FALSE);
+
+-- Denunciante bloqueado por denúncia falsa confirmada (id 10)
+INSERT INTO denunciante (cpf_hash, bloqueado, data_bloqueio, motivo_bloqueio)
+VALUES (SHA2('000.000.000-00', 256), TRUE, NOW(), 'DENUNCIA_FALSA_CONFIRMADA');
+
+
 -- OCORRÊNCIAS
+-- [AJUSTADO] Range de status atualizado para 1-6 (eram 1-5).
+--             data_encerramento preenchida para status 4 (ENCERRADA) e 5 (REJEITADA).
 DELIMITER $$
 
 CREATE PROCEDURE inserir_ocorrencias()
@@ -273,14 +313,18 @@ BEGIN
     DECLARE ponto_id INT;
     DECLARE status_id INT;
     DECLARE resp_id INT;
+    DECLARE den_id INT;
 
     DECLARE dt DATETIME;
 
     WHILE i <= 15000 DO
 
-        SET ponto_id = FLOOR(1 + RAND()*2000);
-        SET status_id = FLOOR(1 + RAND()*5);
-        SET resp_id = FLOOR(1 + RAND()*80);
+        SET ponto_id  = FLOOR(1 + RAND()*2000);
+        SET status_id = FLOOR(1 + RAND()*6);   -- [AJUSTADO] era RAND()*5
+        SET resp_id   = FLOOR(1 + RAND()*80);
+
+        -- Aproximadamente 30% das ocorrências são de denunciantes cidadãos (id 1-9; id 10 está bloqueado)
+        SET den_id = IF(RAND() < 0.3, FLOOR(1 + RAND()*9), NULL);
 
         SET dt = DATE_SUB(
             NOW(),
@@ -291,6 +335,7 @@ BEGIN
             id_ponto,
             id_status,
             id_responsavel,
+            id_denunciante,
             data_abertura,
             data_ocorrencia,
             descricao,
@@ -304,6 +349,7 @@ BEGIN
             ponto_id,
             status_id,
             resp_id,
+            den_id,
 
             dt,
 
@@ -317,8 +363,9 @@ BEGIN
                 ponto_id
             ),
 
+            -- [AJUSTADO] Preenche data_encerramento para ENCERRADA (4) e REJEITADA (5)
             IF(
-                status_id = 4,
+                status_id IN (4, 5),
                 DATE_ADD(
                     dt,
                     INTERVAL FLOOR(RAND()*10) DAY
@@ -352,6 +399,18 @@ END $$
 DELIMITER ;
 
 CALL inserir_ocorrencias();
+
+
+-- [AJUSTADO] Popula motivo_rejeicao para ocorrências com status REJEITADA
+UPDATE ocorrencia o
+INNER JOIN status_ocorrencia s ON o.id_status = s.id_status
+SET o.motivo_rejeicao = ELT(
+    FLOOR(1 + RAND()*3),
+    'DENUNCIA_FALSA_CONFIRMADA',
+    'SEM_EVIDENCIA_SUFICIENTE',
+    'FORA_DA_AREA_DE_COBERTURA'
+)
+WHERE s.nome_status = 'REJEITADA';
 
 
 -- OCORRÊNCIA RESÍDUO
