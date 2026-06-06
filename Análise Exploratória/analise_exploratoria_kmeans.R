@@ -196,7 +196,7 @@ cat("\nDistribuição de bairros por nível de risco:\n")
 print(table(df_resultado$risco))
 
 # =============================================================================
-# PASSO 6: VISUALIZAÇÕES
+# PASSO 6: VISUALIZAÇÕES — salvas como PNG
 # =============================================================================
 
 cores_risco <- c(
@@ -206,7 +206,7 @@ cores_risco <- c(
   "CONTROLADO"  = "#2ECC71"
 )
 
-# 6.1 Scatter principal: frequência vs reincidência, colorido por cluster
+# 6.1 Scatter principal
 p_scatter <- ggplot(
   df_resultado,
   aes(x = frequencia_ocorrencias, y = taxa_reincidencia_pct, color = risco)
@@ -222,9 +222,10 @@ p_scatter <- ggplot(
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
 
-print(p_scatter)
+ggsave("grafico_scatter.png", plot = p_scatter, width = 10, height = 6, dpi = 150)
+cat("Salvo: grafico_scatter.png\n")
 
-# 6.2 Boxplot: variação da reincidência dentro de cada cluster
+# 6.2 Boxplot
 p_box <- ggplot(
   df_resultado,
   aes(x = reorder(risco, taxa_reincidencia_pct, median),
@@ -240,7 +241,8 @@ p_box <- ggplot(
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(face = "bold"), legend.position = "none")
 
-print(p_box)
+ggsave("grafico_boxplot.png", plot = p_box, width = 8, height = 5, dpi = 150)
+cat("Salvo: grafico_boxplot.png\n")
 
 # 6.3 Top bairros críticos
 top_criticos <- df_resultado |>
@@ -250,25 +252,26 @@ top_criticos <- df_resultado |>
 
 p_criticos <- ggplot(
   top_criticos,
-  aes(x = taxa_reincidencia_pct,
-      y = reorder(bairro, taxa_reincidencia_pct),
+  aes(x = frequencia_ocorrencias,
+      y = reorder(bairro, frequencia_ocorrencias),
       fill = regiao)
 ) +
   geom_bar(stat = "identity", alpha = 0.85) +
-  geom_text(aes(label = paste0(taxa_reincidencia_pct, "%")),
+  geom_text(aes(label = frequencia_ocorrencias),
             hjust = -0.1, size = 3) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(
-    title    = "Top 15 bairros CRÍTICOS por taxa de reincidência",
+    title    = "Top 15 bairros CRÍTICOS por frequência de ocorrências",
     subtitle = "Bairros que exigem intervenção prioritária imediata",
-    x        = "Taxa de reincidência (%)",
+    x        = "Frequência de ocorrências (total histórico)",
     y        = "",
     fill     = "Região"
   ) +
   theme_minimal(base_size = 11) +
   theme(plot.title = element_text(face = "bold"))
 
-print(p_criticos)
+ggsave("grafico_criticos.png", plot = p_criticos, width = 10, height = 7, dpi = 150)
+cat("Salvo: grafico_criticos.png\n")
 
 # =============================================================================
 # RESULTADO FINAL
