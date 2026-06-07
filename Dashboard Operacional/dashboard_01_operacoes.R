@@ -54,10 +54,7 @@ ui <- bs4DashPage(
 
 server <- function(input, output, session){
   output$abertas <- renderbs4ValueBox({
-    valor <- dbGetQuery(con,"
-    SELECT COUNT(*) total FROM ocorrencia o
-    JOIN status_ocorrencia s ON s.id_status = o.id_status
-    WHERE s.nome_status NOT IN ('PENDENTE_VALIDACAO', 'REJEITADA')")
+    valor <- dbGetQuery(con,"SELECT COUNT(*) total FROM ocorrencia")
     bs4ValueBox(
       value = valor$total,
       subtitle = "Ocorrências",
@@ -142,17 +139,17 @@ server <- function(input, output, session){
   })
 
   output$historico <- renderPlotly({
-    dados <- dbGetQuery(con,"SELECT YEAR(data_ocorrencia) ano,
-    MONTH(data_ocorrencia) mes,
-    COUNT(*) quantidade
+    
+    dados <- dbGetQuery(con,"
+    SELECT
+      DATE(data_ocorrencia) AS data,
+      COUNT(*) AS quantidade
     FROM ocorrencia
-    GROUP BY ano, mes
-    ORDER BY ano, mes")
-
-    dados$data <- as.Date(
-      paste(dados$ano, dados$mes, "01", sep = "-")
-    )
-
+    WHERE data_ocorrencia >= CURDATE() - INTERVAL 30 DAY
+    GROUP BY DATE(data_ocorrencia)
+    ORDER BY data
+  ")
+    
     plot_ly(
       dados,
       x = ~data,
@@ -161,13 +158,11 @@ server <- function(input, output, session){
       mode = "lines+markers"
     ) %>%
       layout(
+        title = "Ocorrências nos Últimos 30 Dias",
         yaxis = list(title = "Quantidade"),
-        xaxis = list(
-          title = "Data",
-          tickformat = "%m/%Y",
-          dtick = "M1" #intervalo de 1 mês
-        )
+        xaxis = list(title = "Data")
       )
+    
   })
 }
 
