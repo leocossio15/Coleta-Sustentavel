@@ -13,8 +13,6 @@ ui <- bs4DashPage(
   sidebar = bs4DashSidebar(disable = TRUE),
   
   body = bs4DashBody(
-    
-    # ── Value Boxes ────────────────────────────────────────────────────────
     fluidRow(
       bs4ValueBoxOutput("vb_total",   width = 3),
       bs4ValueBoxOutput("vb_agendado",   width = 3),
@@ -23,7 +21,6 @@ ui <- bs4DashPage(
       bs4ValueBoxOutput("vb_finalizados", width = 2)
     ),
     
-    # ── Agendados para o dia ───────────────────────────────────────────────
     fluidRow(
       bs4Card(
         title       = paste("Atendimentos Agendados —", DATA_REF),
@@ -40,16 +37,13 @@ ui <- bs4DashPage(
         solidHeader = TRUE,
         plotlyOutput("grafico_prioridade", height = 420)
       )
-    ),
-    
+    ),    
   ),
   
   footer = bs4DashFooter()
 )
 
-server <- function(input, output, session) {
-  
-  # ── Value Boxes ──────────────────────────────────────────────────────────
+server <- function(input, output, session) {  
   output$vb_total <- renderbs4ValueBox({
     v <- dbGetQuery(con, paste0("
       SELECT COUNT(*) total FROM atendimento_coleta
@@ -124,8 +118,6 @@ server <- function(input, output, session) {
     )
   })
   
-  # ── Gráfico: atendimentos por prioridade ────────────────────────────────────
-  
   output$grafico_prioridade <- renderPlotly({
     dados <- dbGetQuery(con, paste0("
       SELECT
@@ -148,8 +140,6 @@ server <- function(input, output, session) {
         layout(showlegend = TRUE)
     }
   })
-  
-  # ── Tabela: agendados do dia ─────────────────────────────────────────────
   
   output$tabela_agendados <- renderTable({
     dados <- dbGetQuery(con, paste0("
@@ -180,8 +170,6 @@ server <- function(input, output, session) {
       dados
     }
   })
-
-
 }
 
 shinyApp(ui, server)

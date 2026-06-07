@@ -9,9 +9,7 @@ library(dplyr)
 source("conexao.R")
 
 ui <- bs4DashPage(
-
   header = bs4DashNavbar(disable = TRUE),
-
   sidebar = bs4DashSidebar(disable = TRUE),
 
   body = bs4DashBody(
@@ -65,7 +63,6 @@ ui <- bs4DashPage(
 
 
 server <- function(input, output, session){
-
   output$total_regioes <- renderbs4ValueBox({
     valor <- dbGetQuery(con, "SELECT COUNT(*) total FROM regiao_administrativa")
     bs4ValueBox(valor$total, "Regiões", icon = icon("globe"), color = "primary", gradient = TRUE)
@@ -181,8 +178,7 @@ server <- function(input, output, session){
     )
   })
 
-  output$tabela_regioes <- renderTable({
-    
+  output$tabela_regioes <- renderTable({    
     dados <- dbGetQuery(con, "
     SELECT
       ra.nome_regiao AS Regiao,

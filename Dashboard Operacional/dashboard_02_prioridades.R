@@ -7,7 +7,6 @@ source("conexao.R")
 
 ui <- bs4DashPage(
   header = bs4DashNavbar(disable = TRUE),
-
   sidebar = bs4DashSidebar(disable = TRUE),
 
   body = bs4DashBody(
@@ -41,12 +40,10 @@ ui <- bs4DashPage(
   ),
 
   footer = bs4DashFooter()
-
 )
 
 server <- function(input, output){
   output$donut <- renderPlotly({
-
     dados <- dbGetQuery(con,"
     SELECT prioridade, COUNT(*) quantidade FROM ocorrencia
     GROUP BY prioridade")
@@ -105,7 +102,6 @@ server <- function(input, output){
         yaxis = list(title = "Quantidade de Ocorrências")
       )
   })
-
 }
 
 shinyApp(ui, server)

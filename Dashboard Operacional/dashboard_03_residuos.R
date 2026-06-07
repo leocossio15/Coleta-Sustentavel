@@ -7,11 +7,10 @@ library(RMySQL)
 source("conexao.R")
 
 ui <- bs4DashPage(
-  header = bs4DashNavbar(disable = TRUE),
-
+  header = bs4DashNavbar(disable = TRUE),  
   sidebar = bs4DashSidebar(disable = TRUE),
-
-  body = bs4DashBody(
+  
+  body = bs4DashBody(    
     fluidRow(
       bs4Card(
         title = "Top Tipos de Resíduos",
@@ -20,7 +19,7 @@ ui <- bs4DashPage(
         solidHeader = TRUE,
         plotlyOutput("top_residuos", height = 450)
       ),
-
+      
       bs4Card(
         title = "Categorias de Resíduos",
         width = 6,
@@ -29,7 +28,7 @@ ui <- bs4DashPage(
         plotlyOutput("categorias", height = 450)
       )
     ),
-
+    
     fluidRow(
       bs4Card(
         title = "Periculosidade dos Resíduos",
@@ -38,7 +37,7 @@ ui <- bs4DashPage(
         solidHeader = TRUE,
         plotlyOutput("periculosidade", height = 450)
       ),
-
+      
       bs4Card(
         title = "Volume Estimado por Tipo",
         width = 6,
@@ -48,75 +47,106 @@ ui <- bs4DashPage(
       )
     )
   ),
-
+  
   footer = bs4DashFooter()
 )
 
 server <- function(input, output, session){
-  output$top_residuos <- renderPlotly({
-    dados <- dbGetQuery(con,"SELECT tr.nome_tipo, SUM(orr.quantidade) quantidade
-  FROM ocorrencia_residuo orr
-  JOIN tipo_residuo tr ON tr.id_tipo_residuo = orr.id_tipo_residuo
-  GROUP BY tr.nome_tipo
-  ORDER BY quantidade DESC")
 
+  # TOP TIPOS DE RESÍDUOS
+  output$top_residuos <- renderPlotly({    
+    dados <- dbGetQuery(con, "
+      SELECT
+        tr.nome_tipo,
+        SUM(orr.quantidade) AS quantidade
+      FROM ocorrencia_residuo orr
+      INNER JOIN tipo_residuo tr
+        ON tr.id_tipo_residuo = orr.id_tipo_residuo
+      GROUP BY tr.nome_tipo
+      ORDER BY quantidade DESC
+    ")
+    
     plot_ly(
       dados,
       x = ~quantidade,
       y = ~reorder(nome_tipo, quantidade),
-      type = 'bar',
-      orientation = 'h'
+      type = "bar",
+      orientation = "h"
     ) %>%
       layout(
         xaxis = list(title = "Quantidade"),
         yaxis = list(title = "Tipo de Resíduo")
       )
-  })
+    
+  })  
 
-  output$categorias <- renderPlotly({
-    dados <- dbGetQuery(con,"
-    SELECT tr.categoria, COUNT(*) quantidade
-    FROM ocorrencia_residuo orr
-    JOIN tipo_residuo tr ON tr.id_tipo_residuo = orr.id_tipo_residuo
-    GROUP BY tr.categoria
-    ORDER BY quantidade DESC")
-
+  # CATEGORIAS DE RESÍDUOS
+  output$categorias <- renderPlotly({    
+    dados <- dbGetQuery(con, "
+      SELECT
+        tr.categoria,
+        SUM(orr.quantidade) AS quantidade
+      FROM ocorrencia_residuo orr
+      INNER JOIN tipo_residuo tr
+        ON tr.id_tipo_residuo = orr.id_tipo_residuo
+      GROUP BY tr.categoria
+      ORDER BY quantidade DESC
+    ")
+    
     plot_ly(
       dados,
       labels = ~categoria,
       values = ~quantidade,
       type = "pie",
-      hole = .45
+      hole = 0.45
     )
+    
   })
-
-  output$periculosidade <- renderPlotly({
-    dados <- dbGetQuery(con,"
-    SELECT periculosidade, COUNT(*) quantidade
-    FROM tipo_residuo
-    GROUP BY periculosidade")
-
+  
+  # PERICULOSIDADE
+  output$periculosidade <- renderPlotly({    
+    dados <- dbGetQuery(con, "
+    SELECT
+      tr.periculosidade,
+      SUM(IFNULL(orr.volume_estimado,0)) AS volume
+    FROM ocorrencia_residuo orr
+    INNER JOIN tipo_residuo tr
+      ON tr.id_tipo_residuo = orr.id_tipo_residuo
+    GROUP BY tr.periculosidade
+    ORDER BY volume DESC
+  ")
+    
     plot_ly(
       dados,
       x = ~periculosidade,
-      y = ~quantidade,
-      type = "bar",
-      color = ~periculosidade
+      y = ~volume,
+      type = 'bar',
+      color = ~periculosidade,
+      text = ~round(volume, 2),
+      textposition = "auto"
     ) %>%
       layout(
-        xaxis = list(title = "Periculosidade"),
-        yaxis = list(title = "Quantidade")
+        xaxis = list(title = "Nível de Periculosidade"),
+        yaxis = list(title = "Volume Estimado"),
+        showlegend = FALSE
       )
+    
   })
+  
 
-  output$volume_tipo <- renderPlotly({
-    dados <- dbGetQuery(con,"SELECT tr.nome_tipo,
-    SUM(IFNULL(orr.volume_estimado,0)) volume
-    FROM ocorrencia_residuo orr
-    JOIN tipo_residuo tr ON tr.id_tipo_residuo = orr.id_tipo_residuo
-    GROUP BY tr.nome_tipo
-    ORDER BY volume DESC")
-
+  # VOLUME ESTIMADO POR TIPO  
+  output$volume_tipo <- renderPlotly({    
+    dados <- dbGetQuery(con, "
+      SELECT
+        tr.nome_tipo,
+        SUM(IFNULL(orr.volume_estimado,0)) AS volume
+      FROM ocorrencia_residuo orr
+      INNER JOIN tipo_residuo tr
+        ON tr.id_tipo_residuo = orr.id_tipo_residuo
+      GROUP BY tr.nome_tipo
+      ORDER BY volume DESC
+    ")
+    
     plot_ly(
       dados,
       x = ~nome_tipo,
@@ -124,11 +154,10 @@ server <- function(input, output, session){
       type = "bar"
     ) %>%
       layout(
-        xaxis = list(title = "Tipo"),
-        yaxis = list(title = "Volume")
-      )
-  })
-  
+        xaxis = list(title = "Tipo de Resíduo"),
+        yaxis = list(title = "Volume Estimado")
+      )    
+  })  
 }
 
 shinyApp(ui, server)

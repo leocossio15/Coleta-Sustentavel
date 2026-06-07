@@ -7,8 +7,7 @@ library(RMySQL)
 source("conexao.R")
 
 ui <- bs4DashPage(
-  header = bs4DashNavbar(disable = TRUE),
-  
+  header = bs4DashNavbar(disable = TRUE),  
   sidebar = bs4DashSidebar(disable = TRUE),
   
   body = bs4DashBody(
@@ -48,8 +47,7 @@ ui <- bs4DashPage(
     )
   ),
   
-  footer = bs4DashFooter()
-  
+  footer = bs4DashFooter()  
 )
 
 server <- function(input, output, session){
@@ -62,7 +60,6 @@ server <- function(input, output, session){
       color = "warning",
       gradient = TRUE
     )
-
   })
 
   output$atendimento <- renderbs4ValueBox({
@@ -74,7 +71,6 @@ server <- function(input, output, session){
       color = "primary",
       gradient = TRUE
     )
-
   })
 
   output$concluidas <- renderbs4ValueBox({
@@ -89,7 +85,6 @@ server <- function(input, output, session){
       color = "success",
       gradient = TRUE
     )
-
   })
 
   output$urgentes <- renderbs4ValueBox({
@@ -138,8 +133,7 @@ server <- function(input, output, session){
     )
   })
 
-  output$historico <- renderPlotly({
-    
+  output$historico <- renderPlotly({    
     dados <- dbGetQuery(con,"
     SELECT
       DATE(data_ocorrencia) AS data,
