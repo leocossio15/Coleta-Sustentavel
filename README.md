@@ -63,3 +63,64 @@ O projeto está alinhado principalmente com:
 
 - **ODS 13 – Ação Contra a Mudança Global do Clima**  
   Redução dos impactos ambientais causados pelo acúmulo inadequado de resíduos sólidos urbanos.
+
+## Governança das Denúncias e Proteção do Denunciante
+
+Como parte do processo de monitoramento urbano, o sistema permite o registro de denúncias relacionadas ao descarte irregular de resíduos. Considerando que essas informações podem impactar diretamente análises, indicadores e decisões da gestão pública, foram definidos mecanismos para garantir a confiabilidade dos dados e a proteção da identidade dos denunciantes.
+
+### Autenticação e Responsabilização
+
+- Todo denunciante deve possuir identificação única no sistema.
+- Cada denúncia fica associada a um usuário autenticado.
+- O objetivo é reduzir fraudes, denúncias falsas e tentativas de manipulação dos indicadores urbanos.
+- A autenticação permite responsabilização em casos de uso indevido da plataforma, sem comprometer a privacidade do cidadão.
+
+### Proteção da Identidade
+
+- Os dados de identificação do denunciante não são exibidos em consultas operacionais.
+- Relatórios, dashboards e análises utilizam apenas informações da ocorrência e da localização.
+- A identidade do denunciante permanece restrita aos mecanismos internos de validação e segurança.
+- O sistema busca equilibrar responsabilização e privacidade, garantindo que a origem da denúncia possa ser verificada sem exposição pública do usuário.
+
+### Validação das Ocorrências
+
+Toda denúncia passa por um fluxo de validação antes de integrar as análises do sistema:
+
+1. Pendente de Validação
+2. Aprovada
+3. Em Atendimento
+4. Encerrada
+5. Rejeitada
+6. Duplicada
+
+Somente ocorrências validadas participam dos indicadores, dashboards e análises gerenciais utilizados para apoio à tomada de decisão.
+
+### Tratamento de Denúncias Falsas
+
+- Denúncias comprovadamente falsas podem resultar no bloqueio do usuário para novos registros.
+- O bloqueio não representa exclusão da conta nem remoção dos dados armazenados.
+- O usuário permanece cadastrado no sistema, porém fica impedido de registrar novas denúncias enquanto a restrição estiver ativa.
+- Essa medida foi adotada como mecanismo de prevenção à desinformação e proteção da qualidade dos dados utilizados nas análises urbanas.
+- O objetivo não é punir o cidadão, mas preservar a confiabilidade das informações que subsidiam ações e políticas públicas.
+
+### Revisão Administrativa
+
+- Usuários bloqueados podem solicitar reavaliação da decisão.
+- O bloqueio pode ser revertido após análise administrativa realizada pelos responsáveis pela plataforma.
+- Esse procedimento busca evitar penalizações indevidas decorrentes de possíveis erros de avaliação.
+- A existência de mecanismos de recurso garante maior equilíbrio entre controle de qualidade dos dados e tratamento justo dos usuários.
+
+### Considerações Acadêmicas
+
+Para fins de modelagem de banco de dados e desenvolvimento da disciplina, o projeto adota uma versão simplificada desse processo, representando mecanismos básicos de autenticação, validação, auditoria e prevenção de fraudes.
+
+Em um cenário real de implantação, recomenda-se complementar a solução com:
+
+- Auditorias periódicas;
+- Análise de reincidência;
+- Mecanismos formais de recurso;
+- Integração com canais de atendimento;
+- Políticas institucionais de governança de dados;
+- Procedimentos específicos de conformidade com a LGPD.
+
+Essa abordagem permite representar adequadamente os controles necessários para garantir a qualidade das informações sem aumentar excessivamente a complexidade do modelo de dados proposto para o projeto acadêmico.
